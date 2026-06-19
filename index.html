@@ -86,10 +86,9 @@ background:#22c55e;
 <tbody id="results"></tbody>
 
 </table>
-
 <script>
 
-function loadCSV(){
+async function loadCSV(){
 
 const file=document.getElementById("csvFile").files[0];
 
@@ -100,34 +99,61 @@ return;
 
 const reader=new FileReader();
 
-reader.onload=function(e){
+reader.onload=async function(e){
 
-const rows=e.target.result.split("\n");
+const rows=e.target.result
+.split("\n")
+.filter(x=>x.trim()!="");
 
 let html="";
 
-rows.forEach((row,index)=>{
+for(let i=0;i<rows.length;i++){
 
-if(row.trim()!=""){
+let company=rows[i].trim();
+
+document.getElementById("bar").style.width=
+((i+1)/rows.length*100)+"%";
+
+try{
+
+let response=await fetch(
+"/api/search?company="+encodeURIComponent(company)
+);
+
+let data=await response.json();
 
 html+=`
 <tr>
-<td>${row}</td>
-<td>Searching...</td>
-<td>Searching...</td>
-<td>Searching...</td>
-<td>Pending</td>
+<td>${company}</td>
+<td>
+<a href="${data.search}" target="_blank">
+Search
+</a>
+</td>
+<td>-</td>
+<td>-</td>
+<td>Checked</td>
 </tr>
 `;
 
-document.getElementById("bar").style.width=
-((index+1)/rows.length*100)+"%";
+}
+catch{
+
+html+=`
+<tr>
+<td>${company}</td>
+<td>Error</td>
+<td>-</td>
+<td>-</td>
+<td>Error</td>
+</tr>
+`;
 
 }
 
-});
-
 document.getElementById("results").innerHTML=html;
+
+}
 
 }
 
